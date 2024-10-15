@@ -8,6 +8,8 @@
 #include "OceanDriver.h"
 #include "OceanState.h"
 #include "TimeStepper.h"
+#include <chrono>
+#include <iostream>
 
 namespace OMEGA {
 
@@ -47,13 +49,16 @@ int ocnRun(TimeInstant &CurrTime, ///< [inout] current sim time
 
       // do forward time step
       TimeInstant SimTime = OmegaClock.getPreviousTime();
+      auto prevTime = std::chrono::high_resolution_clock::now();
       DefTimeStepper->doStep(DefOceanState, SimTime);
 
       // write restart file/output, anything needed post-timestep
 
       CurrTime = OmegaClock.getCurrentTime();
-      LOG_INFO("ocnRun: Time step {} complete, clock time: {}", IStep,
-               CurrTime.getString(4, 4, "-"));
+      auto time = std::chrono::high_resolution_clock::now();
+      auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(time - prevTime);
+      LOG_INFO("ocnRun: Time step {} complete, clock time: {}, WC: {}", IStep,
+               CurrTime.getString(4, 4, "-"), elapsed.count() * 1e-9);
    }
 
    return Err;
