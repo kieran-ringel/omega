@@ -23,6 +23,7 @@ int ocnRun(TimeInstant &CurrTime, ///< [inout] current sim time
    // fetch default OceanState and TimeStepper
    OceanState *DefOceanState   = OceanState::getDefault();
    TimeStepper *DefTimeStepper = TimeStepper::getDefault();
+   MachEnv *DefEnv  = MachEnv::getDefault();
 
    TimeInterval TimeStep, ZeroInterval;
 
@@ -39,7 +40,9 @@ int ocnRun(TimeInstant &CurrTime, ///< [inout] current sim time
    I8 IStep = 0;
 
    // time loop, integrate until EndAlarm or error encountered
-   while (Err == 0 && !(EndAlarm.isRinging())) {
+   //while (Err == 0 && !(EndAlarm.isRinging())) {
+   auto start = std::chrono::high_resolution_clock::now();
+   for (int i; i < 1000; i++){
 
       // advance clock
       OmegaClock.advance();
@@ -49,16 +52,18 @@ int ocnRun(TimeInstant &CurrTime, ///< [inout] current sim time
 
       // do forward time step
       TimeInstant SimTime = OmegaClock.getPreviousTime();
-      auto prevTime = std::chrono::high_resolution_clock::now();
       DefTimeStepper->doStep(DefOceanState, SimTime);
 
       // write restart file/output, anything needed post-timestep
 
       CurrTime = OmegaClock.getCurrentTime();
-      auto time = std::chrono::high_resolution_clock::now();
-      auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(time - prevTime);
-      LOG_INFO("ocnRun: Time step {} complete, clock time: {}, WC: {}", IStep,
-               CurrTime.getString(4, 4, "-"), elapsed.count() * 1e-9);
+      //LOG_INFO("ocnRun: Time step {} complete, clock time: {}, WC: {}", IStep,
+       //        CurrTime.getString(4, 4, "-"), elapsed.count() * 1e-9);
+   }
+   auto stop = std::chrono::high_resolution_clock::now();
+   auto elapsed = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start);
+   if(DefEnv->isMasterTask()){
+      std::cout << "Time " << elapsed.count() << "\n";
    }
 
    return Err;
