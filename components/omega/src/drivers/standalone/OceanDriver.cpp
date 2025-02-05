@@ -38,6 +38,7 @@ int main(int argc, char **argv) {
    OMEGA::Clock *ModelClock       = DefStepper->getClock();
    OMEGA::TimeInstant CurrTime    = ModelClock->getCurrentTime();
 
+   Kokkos::fence();
    Pacer::start("RunLoop");
    while (ErrCurr == 0 && !(EndAlarm->isRinging())) {
 
@@ -46,6 +47,7 @@ int main(int argc, char **argv) {
       if (ErrCurr != 0)
          LOG_ERROR("Error advancing Omega run interval");
    }
+   Kokkos::fence();
    Pacer::stop("RunLoop");
 
    Pacer::start("Finalize");

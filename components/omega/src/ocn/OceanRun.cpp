@@ -10,6 +10,7 @@
 #include "OceanState.h"
 #include "TimeMgr.h"
 #include "TimeStepper.h"
+#include "Pacer.h"
 
 namespace OMEGA {
 
@@ -35,7 +36,8 @@ int ocnRun(TimeInstant &CurrTime ///< [inout] current sim time
    // time loop, integrate until EndAlarm or error encountered
    I8 IStep = 0;
    while (Err == 0 && !(EndAlarm->isRinging())) {
-
+      Kokkos::fence();
+      Pacer::start("TimeStep");
       // track step count
       ++IStep;
 
@@ -54,6 +56,8 @@ int ocnRun(TimeInstant &CurrTime ///< [inout] current sim time
 
       LOG_INFO("ocnRun: Time step {} complete, clock time: {}", IStep,
                SimTime.getString(4, 4, "-"));
+      Kokkos::fence();
+      Pacer::stop("TimeStep");
    }
 
    return Err;

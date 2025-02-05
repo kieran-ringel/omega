@@ -16,6 +16,7 @@
 #include "MachEnv.h"
 #include "OmegaKokkos.h"
 #include "TimeStepper.h"
+#include "Pacer.h"
 
 namespace OMEGA {
 
@@ -380,8 +381,12 @@ I4 OceanState::updateTimeLevels() {
       return -1;
    }
 
+   Kokkos::fence();
+   Pacer::start("StateHalo");
    // Exchange halo
    exchangeHalo(1);
+   Kokkos::fence();
+   Pacer::stop("StateHalo");
 
    // Update current time index for layer thickness and normal velocity
    CurTimeIndex = (CurTimeIndex + 1) % NTimeLevels;
